@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>絶対に押すな⚡</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      transition: background 0.5s;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 30px;
+    }
+
+    button {
+      padding: 20px 40px;
+      font-size: 1.5em;
+      background-color: crimson;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* ⚡雷のフラッシュ */
+    .flash {
+      animation: lightning 0.3s ease-in-out 0s 3;
+    }
+
+    @keyframes lightning {
+      0%   { background-color: black; }
+      25%  { background-color: white; }
+      50%  { background-color: black; }
+      75%  { background-color: white; }
+      100% { background-color: black; }
+    }
+
+    /* ⚡雷のビジュアル */
+    .thunder {
+      position: absolute;
+      top: 0;
+      width: 10px;
+      height: 100vh;
+      background: white;
+      animation: strike 0.3s ease-in-out forwards;
+    }
+
+    @keyframes strike {
+      0% { opacity: 0; left: 50%; }
+      50% { opacity: 1; }
+      100% { opacity: 0; top: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <h1>絶対に押すな⚡</h1>
+  <button onclick="strikeLightning()">絶対に押すな</button>
+
+  <script>
+    function strikeLightning() {
+      document.body.classList.add("flash");
+
+      const thunder = document.createElement("div");
+      thunder.classList.add("thunder");
+      document.body.appendChild(thunder);
+
+      setTimeout(() => {
+        document.body.classList.remove("flash");
+        thunder.remove();
+        alert("残念でしたー！ベロベロべー！⚡");
+      }, 800);
+    }
+  </script>
+</body>
+</html>
