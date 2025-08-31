@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>絶対に押すな⚡</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 8px #ff00ff;
+    }
+
+    button {
+      padding: 20px 40px;
+      font-size: 1.5em;
+      background-color: crimson;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #fff;
+    }
+
+    .flash {
+      animation: lightning 0.3s ease-in-out 0s 3;
+    }
+
+    @keyframes lightning {
+      0%   { background-color: black; }
+      25%  { background-color: white; }
+      50%  { background-color: black; }
+      75%  { background-color: white; }
+      100% { background-color: black; }
+    }
+
+    .thunder {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 8px;
+      height: 100vh;
+      background: white;
+      animation: strike 0.3s ease-in-out forwards;
+      box-shadow: 0 0 20px 5px white;
+    }
+
+    @keyframes strike {
+      0% { opacity: 0; transform: translateX(-50%) scaleY(0); }
+      50% { opacity: 1; transform: translateX(-50%) scaleY(1.2); }
+      100% { opacity: 0; transform: translateX(-50%) scaleY(0); }
+    }
+  </style>
+</head>
+<body>
+  <h1>絶対に押すな⚡</h1>
+  <button onclick="strikeLightning()">絶対に押すな</button>
+
+  <!-- 🎵 サウンドファイル -->
+  <audio id="thunder-sound">
+    <source src="https://www.soundjay.com/nature/thunder-01.mp3" type="audio/mpeg">
+    あなたのブラウザはオーディオをサポートしていません。
+  </audio>
+
+  <script>
+    function strikeLightning() {
+      // ビカビカ点滅
+      document.body.classList.add("flash");
+
+      // 落雷ビジュアル
+      const thunder = document.createElement("div");
+      thunder.classList.add("thunder");
+      document.body.appendChild(thunder);
+
+      // 音を鳴らす
+      const sound = document.getElementById("thunder-sound");
+      sound.currentTime = 0;
+      sound.play();
+
+      // 消す処理
+      setTimeout(() => {
+        document.body.classList.remove("flash");
+        thunder.remove();
+        alert("残念でしたー！ベロベロべー！⚡");
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
