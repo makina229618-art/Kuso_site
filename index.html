@@ -1,102 +1,245 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>絶対に押すな⚡</title>
-  <style>
-    body {
-      background-color: black;
-      color: white;
-      height: 100vh;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: 'Arial', sans-serif;
-      overflow: hidden;
-      transition: background 0.3s;
-    }
+import React, { useState, useEffect, useRef } from ‘react’;
 
-    h1 {
-      font-size: 2em;
-      margin-bottom: 30px;
-      text-shadow: 2px 2px 8px #ff00ff;
-    }
+const FruitCatchGame = () => {
+const [basketX, setBasketX] = useState(50);
+const [items, setItems] = useState([]);
+const [score, setScore] = useState(0);
+const [gameOver, setGameOver] = useState(false);
+const [gameStarted, setGameStarted] = useState(false);
+const [speed, setSpeed] = useState(2);
+const [message, setMessage] = useState(’’);
+const gameAreaRef = useRef(null);
+const animationRef = useRef(null);
+const itemIdRef = useRef(0);
 
-    button {
-      padding: 20px 40px;
-      font-size: 1.5em;
-      background-color: crimson;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      box-shadow: 0 0 10px #fff;
-    }
+const fruits = [‘🍇’, ‘🐉’, ‘🥕’, ‘🍎’, ‘🍊’, ‘🍋’, ‘🍌’, ‘🍉’, ‘🍓’, ‘🍑’];
+const badItems = [‘💣’, ‘🪨’, ‘⚡’, ‘🔥’, ‘☠️’];
 
-    .flash {
-      animation: lightning 0.3s ease-in-out 0s 3;
-    }
+useEffect(() => {
+const handleMouseMove = (e) => {
+if (gameAreaRef.current && gameStarted && !gameOver) {
+const rect = gameAreaRef.current.getBoundingClientRect();
+const x = ((e.clientX - rect.left) / rect.width) * 100;
+setBasketX(Math.max(5, Math.min(95, x)));
+}
+};
 
-    @keyframes lightning {
-      0%   { background-color: black; }
-      25%  { background-color: white; }
-      50%  { background-color: black; }
-      75%  { background-color: white; }
-      100% { background-color: black; }
-    }
+```
+const handleTouchMove = (e) => {
+  if (gameAreaRef.current && gameStarted && !gameOver) {
+    e.preventDefault();
+    const rect = gameAreaRef.current.getBoundingClientRect();
+    const x = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
+    setBasketX(Math.max(5, Math.min(95, x)));
+  }
+};
 
-    .thunder {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      width: 8px;
-      height: 100vh;
-      background: white;
-      animation: strike 0.3s ease-in-out forwards;
-      box-shadow: 0 0 20px 5px white;
-    }
+window.addEventListener('mousemove', handleMouseMove);
+window.addEventListener('touchmove', handleTouchMove, { passive: false });
 
-    @keyframes strike {
-      0% { opacity: 0; transform: translateX(-50%) scaleY(0); }
-      50% { opacity: 1; transform: translateX(-50%) scaleY(1.2); }
-      100% { opacity: 0; transform: translateX(-50%) scaleY(0); }
-    }
-  </style>
-</head>
-<body>
-  <h1>絶対に押すな⚡</h1>
-  <button onclick="strikeLightning()">絶対に押すな</button>
+return () => {
+  window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener('touchmove', handleTouchMove);
+};
+```
 
-  <!-- 🎵 サウンドファイル -->
-  <audio id="thunder-sound">
-    <source src="https://www.soundjay.com/nature/thunder-01.mp3" type="audio/mpeg">
-    あなたのブラウザはオーディオをサポートしていません。
-  </audio>
+}, [gameStarted, gameOver]);
 
-  <script>
-    function strikeLightning() {
-      // ビカビカ点滅
-      document.body.classList.add("flash");
+useEffect(() => {
+if (!gameStarted || gameOver) return;
 
-      // 落雷ビジュアル
-      const thunder = document.createElement("div");
-      thunder.classList.add("thunder");
-      document.body.appendChild(thunder);
+```
+const spawnItem = () => {
+  const isBad = Math.random() < 0.25;
+  const newItem = {
+    id: itemIdRef.current++,
+    x: Math.random() * 90 + 5,
+    y: 0,
+    emoji: isBad 
+      ? badItems[Math.floor(Math.random() * badItems.length)]
+      : fruits[Math.floor(Math.random() * fruits.length)],
+    isBad
+  };
+  setItems(prev => [...prev, newItem]);
+};
 
-      // 音を鳴らす
-      const sound = document.getElementById("thunder-sound");
-      sound.currentTime = 0;
-      sound.play();
+const spawnInterval = setInterval(spawnItem, Math.max(400, 1200 - score * 8));
 
-      // 消す処理
-      setTimeout(() => {
-        document.body.classList.remove("flash");
-        thunder.remove();
-        alert("残念でしたー！ベロベロべー！⚡");
-      }, 1000);
-    }
-  </script>
-</body>
-</html>
+return () => clearInterval(spawnInterval);
+```
+
+}, [gameStarted, gameOver, score]);
+
+useEffect(() => {
+if (!gameStarted || gameOver) return;
+
+```
+const updateGame = () => {
+  setItems(prev => {
+    const updated = prev.map(item => ({
+      ...item,
+      y: item.y + speed
+    }));
+
+    const remaining = updated.filter(item => {
+      if (item.y > 85 && item.y < 95) {
+        if (Math.abs(item.x - basketX) < 8) {
+          if (item.isBad) {
+            setScore(s => Math.max(0, s - 3));
+            setMessage('😱 -3点！');
+            setTimeout(() => setMessage(''), 800);
+          } else {
+            setScore(s => s + 1);
+            setMessage('✨ +1点！');
+            setTimeout(() => setMessage(''), 500);
+          }
+          return false;
+        }
+      }
+      if (item.y > 100) {
+        if (!item.isBad) {
+          setGameOver(true);
+        }
+        return false;
+      }
+      return true;
+    });
+
+    return remaining;
+  });
+
+  animationRef.current = requestAnimationFrame(updateGame);
+};
+
+animationRef.current = requestAnimationFrame(updateGame);
+
+return () => {
+  if (animationRef.current) {
+    cancelAnimationFrame(animationRef.current);
+  }
+};
+```
+
+}, [gameStarted, gameOver, basketX, speed]);
+
+useEffect(() => {
+setSpeed(2 + score * 0.04);
+}, [score]);
+
+const startGame = () => {
+setGameStarted(true);
+setGameOver(false);
+setScore(0);
+setItems([]);
+setSpeed(2);
+itemIdRef.current = 0;
+setMessage(’’);
+};
+
+const restartGame = () => {
+setGameOver(false);
+setScore(0);
+setItems([]);
+setSpeed(2);
+itemIdRef.current = 0;
+setMessage(’’);
+};
+
+return (
+<div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-sky-400 to-green-300 p-4">
+<div className="mb-4 text-center relative">
+<h1 className=“text-5xl font-bold text-green-800 mb-2” style={{ textShadow: ‘2px 2px 4px rgba(0,0,0,0.3)’ }}>
+🧺 フルカゴ 🧺
+</h1>
+<div className="text-3xl font-bold text-yellow-600 bg-white bg-opacity-70 px-4 py-2 rounded-lg inline-block shadow-lg">
+スコア: {score}
+</div>
+{message && (
+<div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-2xl font-bold text-white bg-black bg-opacity-60 px-4 py-2 rounded-full animate-bounce">
+{message}
+</div>
+)}
+</div>
+
+```
+  <div 
+    ref={gameAreaRef}
+    className="relative w-full max-w-md h-96 bg-gradient-to-b from-sky-300 to-green-200 rounded-lg shadow-2xl overflow-hidden border-4 border-amber-600"
+    style={{ touchAction: 'none' }}
+  >
+    <div className="absolute inset-0 flex items-end justify-center pointer-events-none">
+      <div className="text-9xl opacity-40 mb-8">🌳</div>
+    </div>
+
+    {!gameStarted && (
+      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-20">
+        <div className="text-center">
+          <button
+            onClick={startGame}
+            className="px-8 py-4 bg-green-600 text-white text-2xl font-bold rounded-full hover:bg-green-700 transform hover:scale-110 transition-all shadow-lg mb-4"
+          >
+            ゲームスタート！
+          </button>
+          <div className="text-white text-sm bg-black bg-opacity-60 px-4 py-2 rounded-lg">
+            🍇 果物をキャッチ！<br/>
+            💣 爆弾は避けて！<br/>
+            果物を落とすとゲームオーバー
+          </div>
+        </div>
+      </div>
+    )}
+
+    {gameOver && (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 z-20">
+        <div className="text-white text-center">
+          <div className="text-5xl mb-4">😢</div>
+          <div className="text-4xl font-bold mb-4">ゲームオーバー！</div>
+          <div className="text-2xl mb-6">最終スコア: {score}</div>
+          <button
+            onClick={restartGame}
+            className="px-8 py-4 bg-green-500 text-white text-xl font-bold rounded-full hover:bg-green-600 transform hover:scale-110 transition-all shadow-lg"
+          >
+            もう一回！
+          </button>
+        </div>
+      </div>
+    )}
+
+    {items.map(item => (
+      <div
+        key={item.id}
+        className="absolute text-4xl transition-none"
+        style={{
+          left: `${item.x}%`,
+          top: `${item.y}%`,
+          transform: 'translate(-50%, -50%)',
+          filter: item.isBad ? 'drop-shadow(0 0 8px rgba(255,0,0,0.8))' : 'none'
+        }}
+      >
+        {item.emoji}
+      </div>
+    ))}
+
+    <div
+      className="absolute bottom-2 text-5xl transition-none"
+      style={{
+        left: `${basketX}%`,
+        transform: 'translateX(-50%)',
+        filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.3))'
+      }}
+    >
+      🧺
+    </div>
+  </div>
+
+  <div className="mt-4 text-center text-gray-800 bg-white bg-opacity-70 px-4 py-2 rounded-lg">
+    <p className="text-sm font-semibold">マウスやタッチで籠を動かそう！</p>
+    <p className="text-xs mt-1">果物 +1点 / 変なもの -3点 / 果物を落としたらアウト</p>
+  </div>
+</div>
+```
+
+);
+};
+
+export default FruitCatchGame;
